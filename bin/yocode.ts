@@ -73,6 +73,11 @@ import {
   summarizeCorrectionPatterns,
 } from "../lib/learning";
 import {
+  parsePlan,
+  buildExecutionPlan,
+  generateWaveInstructions,
+} from "../lib/orchestrator";
+import {
   loadConnectorConfig,
   getConnectorStatuses,
   detectConnectors,
@@ -728,6 +733,22 @@ async function main(): Promise<void> {
       await dreamRun(getFlag("project"));
       break;
 
+    case "execute": {
+      const planPath = args[1];
+      if (!planPath) {
+        console.error("Usage: yocode execute <path-to-PLAN.md>");
+        process.exit(1);
+      }
+      const project = getFlag("project") || findProjectRoot();
+      const { plan, waves, summary } = await buildExecutionPlan(planPath, project);
+      printText(summary);
+      printText("\n---\n");
+      for (const wave of waves) {
+        printText(generateWaveInstructions(wave));
+      }
+      break;
+    }
+
     case "learn":
       switch (subcommand) {
         case "capture": {
@@ -832,6 +853,8 @@ Commands:
   memory stage <body>         Stage a correction for review
   memory regen-index <dir>    Regenerate index.md
   memory validate-refs <dir>  Check for stale file references
+
+  execute <plan.md>           Parse plan and generate wave spawn instructions
 
   learn capture <what> <fix>  Capture a correction
   learn decide <what> <why>   Log a decision
