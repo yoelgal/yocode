@@ -495,6 +495,83 @@ export async function detectContradictions(
   return contradictions;
 }
 
+// ─── Invalidation Chains ─────────────────────────────────────────────────────
+
+export interface InvalidationChain {
+  /** The memory that changed */
+  source: Memory;
+  /** Memories that depend on the same wiki-links and may need updating */
+  affected: Memory[];
+  /** The shared links that create the dependency */
+  sharedLinks: string[];
+}
+
+/**
+ * When a memory changes, trace all other memories that share its wiki-links.
+ * Returns the full chain so the user can review and confirm updates.
+ *
+ * Example: If "LLM Primary: MiniMax M2.5" changes to Claude Sonnet,
+ * this finds all memories that also link to [[MiniMax-M2.5]] or
+ * [[briefing-pipeline]] so they can be updated atomically.
+ */
+export async function traceInvalidationChain(
+  changedMemory: Memory,
+  searchPaths: string[]
+): Promise<InvalidationChain> {
+  const sourceLinks = extractWikiLinks(changedMemory.body);
+  const frontmatterLinks = changedMemory.frontmatter.linked || [];
+  const allSourceLinks = [...new Set([...sourceLinks, ...frontmatterLinks])];
+
+  if (allSourceLinks.length === 0) {
+    return { source: changedMemory, affected: [], sharedLinks: [] };
+  }
+
+  const allMemories = await loadAllMemories(searchPaths);
+  const affected: Memory[] = [];
+  const sharedLinksSet = new Set<string>();
+
+  for (const mem of allMemories) {
+    if (mem.path === changedMemory.path) continue;
+
+    const memLinks = [
+      ...extractWikiLinks(mem.body),
+      ...(mem.frontmatter.linked || []),
+    ];
+
+    const shared = allSourceLinks.filter((link) =>
+      memLinks.some((ml) => ml.toLowerCase() === link.toLowerCase())
+    );
+
+    if (shared.length > 0) {
+      affected.push(mem);
+      shared.forEach((s) => sharedLinksSet.add(s));
+    }
+  }
+
+  return {
+    source: changedMemory,
+    affected,
+    sharedLinks: [...sharedLinksSet],
+  };
+}
+
+/**
+ * Invalidate a memory — mark as archived with a reason, but don't delete.
+ * Preserves temporal reasoning (Mem0's approach).
+ */
+export async function invalidateMemory(
+  memory: Memory,
+  reason: string,
+  supersededBy?: string
+): Promise<void> {
+  memory.frontmatter.archived = true;
+  if (supersededBy) {
+    memory.frontmatter.superseded_by = supersededBy;
+  }
+  const note = `\n\n> **Invalidated:** ${reason} (${new Date().toISOString().split("T")[0]})\n`;
+  await writeMemory(memory.path, memory.frontmatter, memory.body + note);
+}
+
 // ─── Index Maintenance ───────────────────────────────────────────────────────
 
 /** Regenerate an index.md file from all memories in a directory */

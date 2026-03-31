@@ -60,6 +60,8 @@ import {
   globalMemoryPath,
   stackMemoryPath,
   projectMemoryPath,
+  traceInvalidationChain,
+  invalidateMemory,
 } from "../lib/memory";
 
 import { classifyIntent, generatePreamble } from "../lib/intent";
@@ -682,8 +684,33 @@ async function main(): Promise<void> {
         case "validate-refs":
           await memoryValidateRefs(args[2] || globalMemoryPath());
           break;
+        case "invalidate": {
+          const memPath = args[2];
+          if (!memPath) { console.error("Usage: yocode memory invalidate <path> <reason>"); process.exit(1); }
+          const reason = args.slice(3).filter((a) => !a.startsWith("--")).join(" ") || "Superseded";
+          const mem = await readMemory(memPath);
+          if (!mem) { console.error(`Memory not found: ${memPath}`); process.exit(1); }
+          // Trace the invalidation chain
+          const project = getFlag("project") || findProjectRoot();
+          const chain = await traceInvalidationChain(mem, [
+            globalMemoryPath(),
+            join(homedir(), ".yocode", "memory", "stacks"),
+            projectMemoryPath(project),
+          ]);
+          if (chain.affected.length > 0) {
+            printText(`Invalidation chain for "${mem.title}":\n`);
+            for (const a of chain.affected) {
+              printText(`  → ${a.title} (${a.path})`);
+              printText(`    Shared links: ${chain.sharedLinks.map((l) => `[[${l}]]`).join(", ")}`);
+            }
+            printText(`\n${chain.affected.length} dependent memories found. Review these after invalidation.`);
+          }
+          await invalidateMemory(mem, reason, getFlag("superseded-by"));
+          printText(`\nInvalidated: ${memPath} — "${reason}"`);
+          break;
+        }
         default:
-          console.error("Usage: yocode memory <load-l0|load-l1|search|add|stage|regen-index|validate-refs>");
+          console.error("Usage: yocode memory <load-l0|load-l1|search|add|stage|regen-index|validate-refs|invalidate>");
           process.exit(1);
       }
       break;
