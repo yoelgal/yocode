@@ -1,0 +1,8 @@
+# Connector auth contains secrets
+connectors.json
+
+# Debug sessions can be large
+debug/sessions/
+
+# Staging is transient
+.staging/

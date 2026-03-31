@@ -1,8 +1,8 @@
 # Source repos (cloned for lifting code, not part of yocode)
 sources/
 
-# Per-project state
-.yocode/
+# Per-project state (but not our template)
+/.yocode/
 
 # Node
 node_modules/
@@ -26,5 +26,5 @@ bun.lockb
 bin/browse
 bin/yocode
 
-# Connector auth (contains secrets)
-connectors.json
+# Connector auth (contains secrets, but not our template)
+/connectors.json
