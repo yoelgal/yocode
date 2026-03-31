@@ -82,6 +82,40 @@ else
   echo "1" >> "$dream_state"
 fi
 
+# ─── Context Bracket Detection ────────────────────────────────────────────────
+# Adapts memory injection verbosity based on remaining context.
+# FRESH (70%+): lean injection, trust recent context
+# MODERATE (40-70%): reinforce key rules
+# DEPLETED (15-40%): heavy reinforcement, include axioms in full
+# CRITICAL (<15%): suggest compaction
+
+context_pct="${CLAUDE_CONTEXT_REMAINING_PERCENT:-100}"
+if [[ "$context_pct" =~ ^[0-9]+$ ]]; then
+  if [[ "$context_pct" -le 15 ]]; then
+    output+=$'\n<yocode-bracket level="CRITICAL">\n'
+    output+="Context is critically low (${context_pct}%). Run /compact now."$'\n'
+    output+="Commit any uncommitted work first."$'\n'
+    output+=$'</yocode-bracket>\n'
+  elif [[ "$context_pct" -le 40 ]]; then
+    output+=$'\n<yocode-bracket level="DEPLETED">\n'
+    output+="Context at ${context_pct}%. Reinforcing key rules."$'\n'
+    # Re-inject axioms in full for depleted context
+    if [[ -d "$axioms_dir" ]]; then
+      for axiom in "$axioms_dir"/*.md; do
+        [[ -f "$axiom" ]] || continue
+        content=$(sed -n '/^---$/,/^---$/!p' "$axiom" | head -15)
+        if [[ -n "$content" ]]; then
+          output+="$content"$'\n'
+        fi
+      done
+    fi
+    output+=$'</yocode-bracket>\n'
+  elif [[ "$context_pct" -le 70 ]]; then
+    output+=$'\n<yocode-bracket level="MODERATE" />\n'
+  fi
+  # FRESH (70%+): no extra injection, lean context
+fi
+
 # ─── Output ───────────────────────────────────────────────────────────────────
 
 if [[ -n "$output" ]]; then
