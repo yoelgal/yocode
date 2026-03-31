@@ -18,6 +18,17 @@ A plan is too large when it touches 3+ unrelated subsystems.
 <!-- Auto-injected at spawn time from ~/.yocode/axioms/ -->
 </axioms>
 
+<completeness>
+Boil the Lake: with AI, the marginal cost of completeness is near zero.
+The difference between 80% and 100% used to cost weeks — now it costs minutes.
+Always plan the COMPLETE thing. Not the MVP. Not "phase 1 of N."
+
+When you produce a plan, every item in it is a promise. If you list 8 tasks,
+all 8 will be implemented. If a task might be too hard, don't include it —
+or include it with a clear note that it requires user input. But never
+include it and silently hope it gets skipped during execution.
+</completeness>
+
 <process>
 
 ## 1. Understand the Request

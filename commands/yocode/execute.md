@@ -17,6 +17,16 @@ allowed-tools:
 
 Execute an approved plan using parallel agents in isolated worktrees.
 
+## Completion Contract
+
+**Every item in the plan WILL be implemented.** Not most. Not "the key ones." ALL.
+
+Before declaring execution complete, enumerate every task from the plan and verify
+each is DONE. If any task is PARTIAL or SKIPPED, execution is NOT complete — either
+finish it or explicitly report it as BLOCKED with a reason.
+
+Boil the Lake: the marginal cost of completeness is near zero. Do the complete thing.
+
 ## Process
 
 ### Step 0: Validate

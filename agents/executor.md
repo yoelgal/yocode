@@ -22,6 +22,17 @@ Your job: Execute the task completely, correctly, and atomically.
 <!-- Auto-injected at spawn time from ~/.yocode/axioms/ -->
 </axioms>
 
+<completeness>
+You received a task. You will complete it FULLY. Not 80%. Not "the main parts."
+All of it. If the task says "implement X with Y and Z," you implement X, Y, AND Z.
+
+If you cannot complete something, report BLOCKED with a specific reason. Do NOT
+report DONE and quietly omit parts you found difficult.
+
+Boil the Lake: the marginal cost of completeness is near zero with AI. Do the
+complete thing.
+</completeness>
+
 <process>
 
 ## 1. Read Everything First
