@@ -558,23 +558,57 @@ async function dreamRun(projectPath?: string): Promise<void> {
   }
 
   // Check for cross-project promotion candidates
-  // A rule that appears in 2+ projects should be promoted to stack or global
+  // A project rule that doesn't exist at higher scope should be promoted
   let promotionCandidates = 0;
+  const promoted: string[] = [];
+
   if (projMems.length > 0) {
     for (const pm of projMems) {
-      // Check if global or stack already has a similar rule
-      const allOther = [...globalMems, ...stackMems];
-      for (const om of allOther) {
+      if (pm.frontmatter.type !== "rule") continue;
+
+      // Check if this project rule already exists at global or stack scope
+      const allHigher = [...globalMems, ...stackMems];
+      let alreadyExists = false;
+
+      for (const om of allHigher) {
         const wordsP = new Set(pm.body.toLowerCase().split(/\s+/).filter((w) => w.length > 3));
         const wordsO = new Set(om.body.toLowerCase().split(/\s+/).filter((w) => w.length > 3));
         if (wordsP.size < 3 || wordsO.size < 3) continue;
         const overlap = [...wordsP].filter((w) => wordsO.has(w)).length;
         const sim = overlap / Math.min(wordsP.size, wordsO.size);
-        if (sim > 0.6 && sim < 0.9) {
-          printText(`  Promotion candidate: "${pm.title}" (project) similar to "${om.title}" (${om.frontmatter.scope})`);
-          promotionCandidates++;
+        if (sim > 0.6) {
+          alreadyExists = true;
+          break;
         }
       }
+
+      if (!alreadyExists) {
+        // Determine promotion target: if it references a stack keyword → stack, else → global
+        const scopeResult = inferScope(pm.body);
+        const targetScope = scopeResult.scope === "stack" ? `stack/${(scopeResult as any).stack}` : "global";
+        const targetDir = scopeResult.scope === "stack"
+          ? join(stackMemoryPath((scopeResult as any).stack || "general"), "rules")
+          : join(globalMemoryPath(), "rules");
+
+        // Copy the memory to the higher scope
+        const slug = slugify(pm.title || pm.body.split("\n")[0].slice(0, 40));
+        const targetPath = join(targetDir, `${slug}.md`);
+        const newFm: MemoryFrontmatter = {
+          ...pm.frontmatter,
+          scope: targetScope,
+          last_validated: new Date().toISOString().split("T")[0],
+        };
+        await writeMemory(targetPath, newFm, pm.body);
+        promoted.push(`"${pm.title}" → ${targetScope}`);
+        promotionCandidates++;
+      }
+    }
+  }
+
+  if (promoted.length > 0) {
+    printText("  Promoted to higher scope:");
+    for (const p of promoted) {
+      printText(`    → ${p}`);
     }
   }
 
