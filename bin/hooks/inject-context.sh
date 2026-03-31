@@ -1,77 +1,60 @@
 #!/usr/bin/env bash
 # yocode UserPromptSubmit hook
 # Injects relevant L1 memories based on keywords in the user's message.
+# Also classifies intent for mode-aware context injection.
 # Target: <50ms execution time.
 #
-# Receives the user's prompt via stdin from Claude Code hooks system.
+# Receives the user's prompt via stdin from Claude Code.
 
 set -euo pipefail
 
 YOCODE_HOME="${HOME}/.yocode"
-STACKS_MEMORY="${YOCODE_HOME}/memory/stacks"
-PROJECT_ROOT="$(pwd)"
-PROJECT_MEMORY="${PROJECT_ROOT}/.yocode/memory"
+YOCODE_CLI="${YOCODE_HOME}/bin/yocode.ts"
 
-# Read user prompt from stdin (Claude Code passes it)
+# Read user prompt from stdin
 user_prompt=$(cat)
 
-# Quick exit if prompt is very short (single word, greeting, etc.)
-if [[ ${#user_prompt} -lt 15 ]]; then
+# Quick exit if prompt is very short
+if [[ ${#user_prompt} -lt 10 ]]; then
+  exit 0
+fi
+
+# Check CLI exists
+if [[ ! -f "$YOCODE_CLI" ]]; then
   exit 0
 fi
 
 output=""
 
-# ─── Extract Keywords ─────────────────────────────────────────────────────────
-# Simple: lowercase, split on spaces/punctuation, match against known stacks
+# ─── Extract Keywords from Prompt ─────────────────────────────────────────────
+# Pull significant words (4+ chars, lowercase, unique) as keywords for L1 matching
 
-prompt_lower=$(echo "$user_prompt" | tr '[:upper:]' '[:lower:]')
+keywords=$(echo "$user_prompt" | tr '[:upper:]' '[:lower:]' | tr -cs '[:alpha:]' '\n' | awk 'length >= 4' | sort -u | head -20 | tr '\n' ' ')
 
-# ─── L1: Load Matching Stack Memories ─────────────────────────────────────────
+if [[ -n "$keywords" ]]; then
+  # Call CLI for L1 memory injection
+  l1_output=$(bun run "$YOCODE_CLI" memory load-l1 $keywords 2>/dev/null || true)
 
-if [[ -d "$STACKS_MEMORY" ]]; then
-  for stack_dir in "$STACKS_MEMORY"/*/; do
-    [[ -d "$stack_dir" ]] || continue
-    stack_name=$(basename "$stack_dir")
-
-    # Check if stack name appears in prompt
-    if echo "$prompt_lower" | grep -qw "$stack_name" 2>/dev/null; then
-      # Load all rules from this stack
-      for rule in "$stack_dir"/*.md "$stack_dir"/rules/*.md; do
-        [[ -f "$rule" ]] || continue
-        [[ "$(basename "$rule")" == "index.md" ]] && continue
-
-        # Strip frontmatter
-        content=$(sed -n '/^---$/,/^---$/!p' "$rule" | head -20)
-        if [[ -n "$content" ]]; then
-          output+="[${stack_name}] ${content}"$'\n\n'
-        fi
-      done
-    fi
-  done
+  if [[ -n "$l1_output" ]]; then
+    output+="$l1_output"$'\n'
+  fi
 fi
 
-# ─── L1: Load Matching Project Rules ─────────────────────────────────────────
+# ─── Intent Classification ────────────────────────────────────────────────────
+# Classify the message so Claude can adapt behavior without announcing mode changes
 
-if [[ -d "$PROJECT_MEMORY/rules" ]]; then
-  for rule in "$PROJECT_MEMORY/rules"/*.md; do
-    [[ -f "$rule" ]] || continue
+intent_json=$(bun run "$YOCODE_CLI" intent "$user_prompt" 2>/dev/null || true)
 
-    # Check if any keyword from the rule appears in the prompt
-    # Read the keywords from frontmatter
-    keywords=$(sed -n '/^keywords:/{ s/^keywords: *\[//; s/\].*//; s/,/ /g; p; }' "$rule" 2>/dev/null)
+if [[ -n "$intent_json" ]]; then
+  mode=$(echo "$intent_json" | grep -o '"mode":"[^"]*"' | head -1 | cut -d'"' -f4)
+  confidence=$(echo "$intent_json" | grep -o '"confidence":"[^"]*"' | head -1 | cut -d'"' -f4)
 
-    for kw in $keywords; do
-      kw_clean=$(echo "$kw" | tr -d '[:space:]"'"'" | tr '[:upper:]' '[:lower:]')
-      if echo "$prompt_lower" | grep -qw "$kw_clean" 2>/dev/null; then
-        content=$(sed -n '/^---$/,/^---$/!p' "$rule" | head -20)
-        if [[ -n "$content" ]]; then
-          output+="[project] ${content}"$'\n\n'
-        fi
-        break
-      fi
-    done
-  done
+  # Only inject mode hint if confidence is medium or high
+  if [[ "$confidence" == "high" || "$confidence" == "medium" ]]; then
+    if [[ -n "$mode" && "$mode" != "explore" ]]; then
+      output+="<yocode-intent mode=\"$mode\" confidence=\"$confidence\" />"$'\n'
+    fi
+  fi
 fi
 
 # ─── Output ───────────────────────────────────────────────────────────────────

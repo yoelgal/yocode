@@ -1,66 +1,80 @@
 #!/usr/bin/env bash
 # yocode PostToolUse observer hook
-# Watches for correction patterns, decisions, and errors.
+# Watches for correction patterns, logs tool usage, monitors context pressure.
 # Pattern matching only — no LLM calls. Target: <50ms.
 #
-# The hook receives tool use details via environment variables set by Claude Code:
-#   TOOL_NAME, TOOL_INPUT, TOOL_OUTPUT (when available)
+# Claude Code passes hook context via environment variables and stdin.
 
 set -euo pipefail
 
 YOCODE_HOME="${HOME}/.yocode"
-STAGING_DIR="${YOCODE_HOME}/.staging"
+YOCODE_CLI="${YOCODE_HOME}/bin/yocode.ts"
 PROJECT_ROOT="$(pwd)"
 
 # Read tool output from stdin if available
 tool_output=$(cat 2>/dev/null || true)
 
 # Quick exit for non-interesting tools
-case "${TOOL_NAME:-}" in
-  Read|Glob|Grep|TaskCreate|TaskUpdate|TaskGet|TaskList)
+tool_name="${TOOL_NAME:-}"
+case "$tool_name" in
+  Read|Glob|Grep|TaskCreate|TaskUpdate|TaskGet|TaskList|TaskStop|TaskOutput)
     exit 0
     ;;
 esac
 
-# ─── Correction Detection ────────────────────────────────────────────────────
-# Look for patterns in recent conversation that indicate corrections.
-# These get staged for review, not auto-committed to memory.
-
-# We can't easily access conversation from a hook, but we can detect
-# when the user rejects a tool call (indicated by empty/error output)
-# or when an Edit/Write is immediately followed by another Edit/Write
-# to the same file (likely a correction).
-
-# For now, this hook tracks tool usage patterns for the dream cycle
-# to analyze later. The real correction detection happens via the
-# PreCompact hook which has conversation access.
+# ─── Tool Usage Logging ──────────────────────────────────────────────────────
 
 TOOL_LOG="${YOCODE_HOME}/.tool-log"
 mkdir -p "$(dirname "$TOOL_LOG")"
 
-# Append tool usage (keep last 200 entries)
-echo "$(date +%s)|${TOOL_NAME:-unknown}|${PROJECT_ROOT}" >> "$TOOL_LOG"
+echo "$(date +%s)|${tool_name:-unknown}|${PROJECT_ROOT}" >> "$TOOL_LOG" 2>/dev/null || true
 
-# Trim to last 200 lines
+# Trim to last 500 lines
 if [[ -f "$TOOL_LOG" ]]; then
-  tail -200 "$TOOL_LOG" > "${TOOL_LOG}.tmp" && mv "${TOOL_LOG}.tmp" "$TOOL_LOG"
+  tail -500 "$TOOL_LOG" > "${TOOL_LOG}.tmp" 2>/dev/null && mv "${TOOL_LOG}.tmp" "$TOOL_LOG" 2>/dev/null || true
+fi
+
+# ─── Correction Detection ────────────────────────────────────────────────────
+# Detect patterns that suggest the user corrected Claude's approach.
+# These get staged as potential memory rules.
+#
+# Signals we can detect from tool context:
+# 1. Edit immediately after a Write to the same file (user fixing AI output)
+# 2. Tool rejection (empty output or error on a Write/Edit)
+# 3. Consecutive edits to the same file (iterating on a fix)
+
+if [[ -f "$TOOL_LOG" ]]; then
+  last_two=$(tail -2 "$TOOL_LOG" 2>/dev/null)
+  line_count=$(echo "$last_two" | wc -l | tr -d ' ')
+
+  if [[ "$line_count" -ge 2 ]]; then
+    prev_tool=$(echo "$last_two" | head -1 | cut -d'|' -f2)
+    curr_tool=$(echo "$last_two" | tail -1 | cut -d'|' -f2)
+
+    # Pattern: Write followed by Edit = potential correction
+    if [[ "$prev_tool" == "Write" && "$curr_tool" == "Edit" ]]; then
+      # Log as potential correction signal
+      echo "$(date +%s)|correction_signal|write_then_edit|${PROJECT_ROOT}" >> "${YOCODE_HOME}/.corrections-log" 2>/dev/null || true
+    fi
+
+    # Pattern: Edit followed by Edit on same file = iterating on fix
+    if [[ "$prev_tool" == "Edit" && "$curr_tool" == "Edit" ]]; then
+      echo "$(date +%s)|correction_signal|repeated_edit|${PROJECT_ROOT}" >> "${YOCODE_HOME}/.corrections-log" 2>/dev/null || true
+    fi
+  fi
 fi
 
 # ─── Context Window Monitor ──────────────────────────────────────────────────
-# Inspired by GSD's context window monitoring.
-# Check if we can detect context pressure from Claude Code's environment.
+# Claude Code may expose context metrics in hook environment.
 
-# Claude Code exposes context metrics in some hook environments.
-# If available, inject warnings at thresholds.
-
-context_remaining="${CLAUDE_CONTEXT_REMAINING:-}"
+context_remaining="${CLAUDE_CONTEXT_REMAINING_PERCENT:-}"
 if [[ -n "$context_remaining" ]]; then
   remaining_pct=$(echo "$context_remaining" | grep -oE '[0-9]+' | head -1)
   if [[ -n "$remaining_pct" ]]; then
     if [[ "$remaining_pct" -le 25 ]]; then
       echo "<yocode-warning level=\"critical\">"
       echo "Context window at ${remaining_pct}%. Prepare for context reset."
-      echo "Consider committing current work and using /compact."
+      echo "Consider committing current work and running /compact."
       echo "</yocode-warning>"
     elif [[ "$remaining_pct" -le 35 ]]; then
       echo "<yocode-warning level=\"warning\">"
