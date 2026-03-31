@@ -53,8 +53,12 @@ if [[ -f "$TOOL_LOG" ]]; then
 
     # Pattern: Write followed by Edit = potential correction
     if [[ "$prev_tool" == "Write" && "$curr_tool" == "Edit" ]]; then
-      # Log as potential correction signal
       echo "$(date +%s)|correction_signal|write_then_edit|${PROJECT_ROOT}" >> "${YOCODE_HOME}/.corrections-log" 2>/dev/null || true
+      # Auto-stage a correction signal for the dream cycle to analyze
+      if [[ -f "$YOCODE_CLI" ]]; then
+        bun run "$YOCODE_CLI" memory stage "Correction signal: wrote a file then immediately edited it (write_then_edit pattern)" \
+          --context "Detected at $(date -u +%Y-%m-%dT%H:%M:%SZ) in ${PROJECT_ROOT}" 2>/dev/null &
+      fi
     fi
 
     # Pattern: Edit followed by Edit on same file = iterating on fix
