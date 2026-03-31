@@ -109,9 +109,40 @@ Ask: "Import these? (y = all, n = cancel, or list numbers to select)"
 
 Write approved memories to their scoped locations.
 
-### Step 6: Archive
+### Step 6: Cleanup Decision
 
-Move old tool directories to `.yocode/migrated-from/`:
+Present the user with a clear summary of what's left behind:
+
+```markdown
+## Cleanup
+
+Migration extracted all valuable state into yocode's memory system.
+The original directories are now redundant:
+
+| Directory | Size | Files | Status |
+|-----------|------|-------|--------|
+| .planning/ | [N]KB | [N] files | All knowledge extracted |
+| .paul/ | [N]KB | [N] files | All knowledge extracted |
+| .carl/ | [N]KB | [N] files | All rules imported |
+| .base/ | [N]KB | [N] files | Profile + PSMM imported |
+
+Options:
+  1. **Delete originals** — everything valuable is in .yocode/ now
+  2. **Archive to .yocode/migrated-from/** — keep a backup just in case
+  3. **Leave as-is** — I'll delete them myself later
+```
+
+Ask the user which option they prefer. Default recommendation is option 1
+(delete) if the extraction was complete, option 2 (archive) if anything
+was skipped or partially extracted.
+
+If deleting:
+```bash
+rm -rf .planning/ .paul/ .carl/ .base/
+# Also clean up any tool-specific gitignore entries
+```
+
+If archiving:
 ```bash
 mkdir -p .yocode/migrated-from
 mv .planning/ .yocode/migrated-from/gsd/ 2>/dev/null
@@ -120,9 +151,41 @@ mv .carl/ .yocode/migrated-from/carl/ 2>/dev/null
 mv .base/ .yocode/migrated-from/base/ 2>/dev/null
 ```
 
-Don't delete — archive. The user might want to reference old state.
+### Step 7: Clean CLAUDE.md
 
-### Step 7: Update CLAUDE.md
+CLAUDE.md often accumulates tool-specific instructions from previous workflows.
+These become stale and confusing after migration.
 
-Remove or update any tool-specific references in CLAUDE.md.
-Add yocode-specific instructions if appropriate.
+1. Read CLAUDE.md fully
+2. Identify sections referencing old tools:
+   - GSD command references (`/gsd:*`)
+   - gstack skill references (`/qa`, `/ship`, `/review` pointing to gstack)
+   - Paul workflow instructions (`.paul/`, PAU loop)
+   - CARL domain rules
+   - BASE workspace instructions
+3. Present proposed changes to the user:
+   ```
+   I'd like to clean up these CLAUDE.md sections:
+   - Remove: "## GSD Configuration" (migrated to yocode memory)
+   - Remove: "## gstack skills" (replaced by /yocode: commands)
+   - Update: "## Testing" (keep — project-specific, not tool-specific)
+   - Add: "## yocode" (brief section explaining the new setup)
+   ```
+4. Only make changes the user approves
+5. Commit: `chore: clean up CLAUDE.md after yocode migration`
+
+### Step 8: Verify
+
+After cleanup, verify the project is clean:
+```bash
+# No orphaned tool directories
+ls -d .planning/ .paul/ .carl/ .base/ 2>/dev/null && echo "WARN: old dirs still present"
+
+# No stale references in CLAUDE.md
+grep -n "gsd\|gstack\|/paul\|\.carl\|\.base" CLAUDE.md 2>/dev/null && echo "WARN: stale refs in CLAUDE.md"
+
+# yocode state is populated
+ls .yocode/memory/ 2>/dev/null && echo "OK: yocode memory populated"
+```
+
+Report final status.

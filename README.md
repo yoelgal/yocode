@@ -88,7 +88,8 @@ git clone https://github.com/yoelgal/yocode.git ~/.yocode && ~/.yocode/install.s
 | `/yocode:dream` | Memory consolidation. REM sleep for your codebase. |
 | `/yocode:learn` | Review, search, stage, and prune memories |
 | `/yocode:onboard` | 5 parallel mappers analyze your codebase and seed memory |
-| `/yocode:migrate` | Bring your GSD/gstack/Paul state into yocode |
+| `/yocode:migrate` | Bring your GSD/gstack/Paul state into yocode — then clean up the mess |
+| `/yocode:tidy` | Archive completed phases, clean stale state, reclaim disk space |
 
 ---
 
