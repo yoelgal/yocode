@@ -81,6 +81,7 @@ import {
 } from "../lib/orchestrator";
 import { healthCheckAll } from "../lib/connector-clients";
 import { discoverKeyFiles, generateAssumptionsPrompt } from "../lib/assumptions";
+import { createSeed, loadSeeds, scanRelevantSeeds, formatSeedsForInjection } from "../lib/seeds";
 import {
   loadConnectorConfig,
   getConnectorStatuses,
@@ -777,6 +778,48 @@ async function main(): Promise<void> {
     case "dream":
       await dreamRun(getFlag("project"));
       break;
+
+    case "seed": {
+      const sub = args[1];
+      const project = getFlag("project") || findProjectRoot();
+      switch (sub) {
+        case "add": {
+          const title = args[2] || "";
+          const desc = args.slice(3).filter((a) => !a.startsWith("--")).join(" ") || "";
+          const trigger = getFlag("trigger") || "";
+          if (!title || !trigger) {
+            console.error("Usage: yocode seed add <title> <description> --trigger <when>");
+            process.exit(1);
+          }
+          const path = await createSeed(project, title, desc, trigger, (getFlag("priority") as any) || "medium");
+          printText(`Seed created: ${path}`);
+          break;
+        }
+        case "list": {
+          const seeds = await loadSeeds(project);
+          if (seeds.length === 0) { printText("No active seeds."); break; }
+          for (const s of seeds) {
+            printText(`[${s.priority}] ${s.title}`);
+            printText(`  Trigger: ${s.trigger}`);
+            printText(`  Created: ${s.created}`);
+            printText("");
+          }
+          break;
+        }
+        case "scan": {
+          const context = args.slice(2).filter((a) => !a.startsWith("--")).join(" ");
+          if (!context) { console.error("Usage: yocode seed scan <context>"); process.exit(1); }
+          const relevant = await scanRelevantSeeds(project, context);
+          if (relevant.length === 0) { printText("No relevant seeds for this context."); break; }
+          printText(formatSeedsForInjection(relevant));
+          break;
+        }
+        default:
+          console.error("Usage: yocode seed <add|list|scan>");
+          process.exit(1);
+      }
+      break;
+    }
 
     case "assumptions": {
       const project = getFlag("project") || findProjectRoot();
