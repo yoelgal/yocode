@@ -1,0 +1,30 @@
+# Source repos (cloned for lifting code, not part of yocode)
+sources/
+
+# Per-project state
+.yocode/
+
+# Node
+node_modules/
+dist/
+
+# Bun
+bun.lockb
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Environment
+.env
+.env.*
+
+# Compiled binaries
+bin/browse
+bin/yocode
+
+# Connector auth (contains secrets)
+connectors.json
