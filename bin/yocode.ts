@@ -80,6 +80,7 @@ import {
   generateWaveInstructions,
 } from "../lib/orchestrator";
 import { healthCheckAll } from "../lib/connector-clients";
+import { discoverKeyFiles, generateAssumptionsPrompt } from "../lib/assumptions";
 import {
   loadConnectorConfig,
   getConnectorStatuses,
@@ -776,6 +777,15 @@ async function main(): Promise<void> {
     case "dream":
       await dreamRun(getFlag("project"));
       break;
+
+    case "assumptions": {
+      const project = getFlag("project") || findProjectRoot();
+      const context = args.slice(1).filter((a) => !a.startsWith("--")).join(" ") || "General project understanding";
+      const files = await discoverKeyFiles(project, context);
+      const prompt = generateAssumptionsPrompt(files, context);
+      printText(prompt);
+      break;
+    }
 
     case "execute": {
       const planPath = args[1];
