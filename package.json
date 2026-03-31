@@ -1,0 +1,18 @@
+{
+  "name": "yocode",
+  "version": "0.1.0",
+  "description": "A unified Claude Code workflow tool",
+  "type": "module",
+  "bin": {
+    "yocode": "./bin/yocode.ts"
+  },
+  "scripts": {
+    "build": "bun build ./bin/yocode.ts --outdir dist --target node",
+    "test": "bun test",
+    "dev": "bun run bin/yocode.ts"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
