@@ -7,7 +7,9 @@
     "yocode": "./bin/yocode.ts"
   },
   "scripts": {
-    "build": "bun build ./bin/yocode.ts --outdir dist --target node",
+    "build": "bun build ./bin/yocode.ts --outdir dist --target node && cd browse && bun run build",
+    "build:cli": "bun build ./bin/yocode.ts --outdir dist --target node",
+    "build:browse": "cd browse && bun run build",
     "test": "bun test",
     "dev": "bun run bin/yocode.ts"
   },
