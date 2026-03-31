@@ -464,9 +464,13 @@ async function dreamRun(projectPath?: string): Promise<void> {
     stagedCount = staged.filter((f) => f.endsWith(".md")).length;
   }
 
+  // Analyze correction signals from observe hook
+  const correctionSummary = await summarizeCorrectionPatterns();
+
   printText(`Sessions since last dream: ${sessionCount}`);
   printText(`Tool log entries: ${toolEntries}`);
-  printText(`Staged corrections: ${stagedCount}\n`);
+  printText(`Staged corrections: ${stagedCount}`);
+  printText(`Correction signals: ${correctionSummary}\n`);
 
   // Phase 3: Consolidate
   printText("## Phase 3: Consolidate\n");
@@ -520,9 +524,55 @@ async function dreamRun(projectPath?: string): Promise<void> {
     }
   }
 
-  printText(`Overlapping memories: ${mergedCount}`);
+  // Convert relative dates in memories to absolute
+  let datesConverted = 0;
+  const relDatePatterns = [
+    /\byesterday\b/i,
+    /\blast (week|month|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
+    /\b(this|next) (week|month|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
+    /\b\d+ days? ago\b/i,
+  ];
+
+  for (const mem of allMems) {
+    let changed = false;
+    let body = mem.body;
+    for (const pattern of relDatePatterns) {
+      if (pattern.test(body)) {
+        // Can't resolve the exact date without knowing when it was written,
+        // but flag it for the user
+        printText(`  Relative date found in ${basename(mem.path)}: "${body.match(pattern)?.[0]}"`);
+        datesConverted++;
+        changed = true;
+      }
+    }
+  }
+
+  // Check for cross-project promotion candidates
+  // A rule that appears in 2+ projects should be promoted to stack or global
+  let promotionCandidates = 0;
+  if (projMems.length > 0) {
+    for (const pm of projMems) {
+      // Check if global or stack already has a similar rule
+      const allOther = [...globalMems, ...stackMems];
+      for (const om of allOther) {
+        const wordsP = new Set(pm.body.toLowerCase().split(/\s+/).filter((w) => w.length > 3));
+        const wordsO = new Set(om.body.toLowerCase().split(/\s+/).filter((w) => w.length > 3));
+        if (wordsP.size < 3 || wordsO.size < 3) continue;
+        const overlap = [...wordsP].filter((w) => wordsO.has(w)).length;
+        const sim = overlap / Math.min(wordsP.size, wordsO.size);
+        if (sim > 0.6 && sim < 0.9) {
+          printText(`  Promotion candidate: "${pm.title}" (project) similar to "${om.title}" (${om.frontmatter.scope})`);
+          promotionCandidates++;
+        }
+      }
+    }
+  }
+
+  printText(`\nOverlapping memories: ${mergedCount}`);
   printText(`Broken wiki-links: ${brokenLinks}`);
-  printText(`Stale file references: ${staleCount}\n`);
+  printText(`Stale file references: ${staleCount}`);
+  printText(`Relative dates found: ${datesConverted}`);
+  printText(`Promotion candidates: ${promotionCandidates}\n`);
 
   // Phase 4: Prune & Index
   printText("## Phase 4: Prune & Index\n");
