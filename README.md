@@ -1,118 +1,193 @@
+<div align="center">
+
 # yocode
 
-A unified Claude Code workflow tool. One memory, one system, one set of conventions.
+**One tool. One memory. One system that gets better every time you use it.**
 
-yocode synthesizes the best ideas from [GSD](https://github.com/gsd-build/get-shit-done), [gstack](https://github.com/garrytan/gstack), [Paul](https://github.com/ChristopherKahler/paul), [Seed](https://github.com/ChristopherKahler/seed), and other tools into a single self-improving workflow system.
+[![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/yoelgal/yocode?style=for-the-badge&logo=github&color=181717)](https://github.com/yoelgal/yocode)
 
-## Quickstart
+</div>
+
+---
+
+## Why This Exists
+
+I've used [GSD](https://github.com/gsd-build/get-shit-done), [gstack](https://github.com/garrytan/gstack), [Paul](https://github.com/ChristopherKahler/paul), [Seed](https://github.com/ChristopherKahler/seed), and a bunch of others. They're all good. They all solve adjacent problems. But none of them solve the whole problem.
+
+The fragmentation is the issue. Competing memory systems, conflicting conventions, duplicated effort. Learning something in one tool doesn't transfer to another. You end up context-switching between workflow systems instead of building things.
+
+So I took the best ideas from all of them and built one system:
+
+- **GSD's** wave execution model, fresh-context agents, assumptions mode
+- **gstack's** QA methodology, shipping pipeline, design skills, security audits
+- **Paul's** mandatory UNIFY reconciliation, acceptance-driven development
+- **Seed's** typed ideation, quality gates
+- **CARL's** JIT rule injection, staging pipeline for corrections
+- **Auto-Dream's** memory consolidation cycle
+
+One memory. One set of conventions. One system that improves every session.
+
+---
+
+## Install — One Prompt
 
 Open Claude Code and paste this:
 
-```
-Install yocode: clone https://github.com/yoelgal/yocode to ~/.yocode,
-run the installer at ~/.yocode/install.sh, and verify the hooks are
-registered. Then set up my user profile — ask me a few questions about
-how I work. If I'm in a project, detect the tech stack and offer to
-onboard it.
+> Install yocode: clone https://github.com/yoelgal/yocode to ~/.yocode, run the installer at ~/.yocode/install.sh, and verify the hooks are registered. Then set up my user profile — ask me a few questions about how I work. If I'm in a project, detect the tech stack and offer to onboard it.
+
+That's the entire getting started guide. Claude clones the repo, runs the installer, registers hooks, initializes memory, asks you a few profile questions, and optionally onboards your current project. No manual steps.
+
+Or if you prefer doing it yourself:
+
+```bash
+git clone https://github.com/yoelgal/yocode.git ~/.yocode && ~/.yocode/install.sh
 ```
 
-That's it. Claude handles everything.
+---
 
 ## What You Get
 
-### 20 slash commands
+### 20 commands that cover the full lifecycle
 
+**Build**
 | Command | What it does |
 |---------|-------------|
-| `/yocode:plan` | Structured planning with Assumptions Mode |
-| `/yocode:execute` | Parallel agents in worktrees, wave execution |
-| `/yocode:ship` | Full pipeline: test → review → version → changelog → PR |
-| `/yocode:qa` | 6-category testing with health scores and fix loop |
-| `/yocode:review` | Multi-specialist pre-landing review |
-| `/yocode:debug` | Systematic debugging with persistent knowledge base |
-| `/yocode:retro` | Engineering retrospective with trend tracking |
-| `/yocode:onboard` | Analyze codebase, extract conventions, seed memory |
-| `/yocode:migrate` | Consolidate from GSD/gstack/Paul into yocode |
-| `/yocode:explore` | Open-ended brainstorming with seed system |
-| `/yocode:quick` | Minimal ceremony, just do the thing |
-| `/yocode:dream` | Memory consolidation (REM sleep for your codebase) |
+| `/yocode:explore` | Open-ended brainstorming with a seed system for ideas that aren't actionable yet |
+| `/yocode:plan` | Assumptions Mode — reads your code, forms assumptions, asks only for corrections |
+| `/yocode:execute` | Parallel agents in isolated worktrees, wave-based execution, mandatory reconciliation |
+| `/yocode:quick` | No ceremony. Just do the thing. Still benefits from memory. |
+| `/yocode:debug` | Gather → hypothesize → verify → fix → persist to knowledge base |
+
+**Ship**
+| Command | What it does |
+|---------|-------------|
+| `/yocode:ship` | Full pipeline: merge base → test → review → version bump → changelog → PR |
+| `/yocode:review` | Multi-specialist dispatch: security, performance, API, and test reviewers in parallel |
+| `/yocode:qa` | 6-category testing with health scores. Fix loop: locate → fix → commit → re-test |
+
+**Observe**
+| Command | What it does |
+|---------|-------------|
+| `/yocode:diagnose` | Pull from all connected systems, correlate across sources, find the fire |
+| `/yocode:health` | Quick production status. One table. Is prod up? |
+| `/yocode:canary` | Post-deploy monitoring. 5 checks over 10 minutes. Recommends rollback before your users find the bug. |
+| `/yocode:retro` | 14 metrics, trend tracking, Ship of the Week. Reflection with numbers. |
+
+**Think**
+| Command | What it does |
+|---------|-------------|
+| `/yocode:design` | Full design system: competitive research → typography → color → layout → DESIGN.md |
+| `/yocode:design-review` | Visual audit with AI slop detection. Yes, we know about the gradient. |
+| `/yocode:cso` | Security audit: secrets archaeology, supply chain, OWASP Top 10, STRIDE |
+| `/yocode:office-hours` | Product diagnostic — Startup mode (6 forcing questions) or Builder mode (design thinking) |
+
+**Learn**
+| Command | What it does |
+|---------|-------------|
+| `/yocode:dream` | Memory consolidation. REM sleep for your codebase. |
 | `/yocode:learn` | Review, search, stage, and prune memories |
-| `/yocode:design` | Design system from competitive research to DESIGN.md |
-| `/yocode:design-review` | Visual audit with AI slop detection |
-| `/yocode:cso` | Security audit: secrets, supply chain, OWASP, STRIDE |
-| `/yocode:office-hours` | Product diagnostic (startup + builder modes) |
-| `/yocode:diagnose` | Cross-system production investigation |
-| `/yocode:health` | Quick production status across all connectors |
-| `/yocode:canary` | Post-deploy monitoring loop |
+| `/yocode:onboard` | 5 parallel mappers analyze your codebase and seed memory |
+| `/yocode:migrate` | Bring your GSD/gstack/Paul state into yocode |
 
-### Three-tier memory system
+---
 
+### Memory that actually works
+
+Most tools either don't remember anything, or remember everything (and drown you in stale context). yocode does neither.
+
+**Three scopes:**
 ```
-~/.yocode/memory/global/     → Universal lessons (axioms + rules)
-~/.yocode/memory/stacks/X/   → Technology-specific lessons
-.yocode/memory/              → Project-specific lessons
+~/.yocode/memory/global/     → "Don't restrict maxTokens" (universal)
+~/.yocode/memory/stacks/X/   → "pgvector needs SET search_path on hosted Supabase" (tech-specific)
+.yocode/memory/              → "Entities are permanent, never deleted" (this project)
 ```
 
-Memory loads in three tiers:
-- **L0** (always loaded): Index summaries, axioms, profile — ~50 lines per scope
-- **L1** (JIT on keyword match): Individual rules loaded when the topic comes up
-- **L2** (search only): Archives, old debug sessions — retrieved on explicit search
+**Three loading tiers:**
+- **L0** — Always loaded. Index summaries, axioms. ~50 lines. The stuff that matters every session.
+- **L1** — Loaded when relevant. Mention "Supabase" and your Supabase lessons appear. JIT injection.
+- **L2** — Search only. Old debug sessions, archived decisions. Retrieved when you explicitly need them.
 
-Memories use `[[wiki-links]]` for graph traversal and contradiction detection. The memory directory is Obsidian-compatible — open it as a vault for visual graph browsing.
-
-### Self-improving system
-
-Corrections you make are captured, classified by scope, deduplicated, and staged as memory rules. The system learns from every interaction.
-
+**Self-improving:**
 ```
 You correct something
   → Captured with context
-  → Classified: global / stack / project
+  → Scope inferred (global / stack / project)
   → Deduplicated against existing rules
-  → Staged for review (or auto-approved if low-risk)
-  → Activated as a rule, loaded JIT
+  → Staged for review
+  → Activated as a permanent rule
 ```
 
-### 7 specialized agents
+Correct it once, never correct it again.
 
-| Agent | Model | Role |
-|-------|-------|------|
-| planner | opus | Breaks problems into parallel waves |
-| executor | sonnet | Implements tasks in isolated worktrees |
-| reviewer | sonnet | Read-only code review |
-| researcher | sonnet | Read-only intelligence gathering |
-| debugger | sonnet | Systematic debugging |
-| mapper | haiku | Fast codebase scanning |
-| verifier | sonnet | Goal-backward verification |
+---
 
-Three model profiles (quality / balanced / budget) control cost.
+### 7 agents with the right model for the job
 
-### 4 lifecycle hooks
+| Agent | Model | Why |
+|-------|-------|-----|
+| **planner** | opus | Planning is where mistakes are most expensive |
+| **executor** | sonnet | Implementation needs quality but burns lots of tokens |
+| **reviewer** | sonnet | Catches bugs, not creative writing |
+| **researcher** | sonnet | Reads a lot, synthesizes well |
+| **debugger** | sonnet | Systematic investigation |
+| **mapper** | haiku | Scans fast, breadth over depth |
+| **verifier** | sonnet | "Did we ship what we promised?" — goal-backward checking |
 
-| Hook | Purpose | Budget |
-|------|---------|--------|
-| SessionStart | Load axioms + L0 memories | <100ms |
-| UserPromptSubmit | JIT inject L1 memories | <50ms |
-| PostToolUse | Observe patterns + context pressure | <50ms |
-| PreCompact | Save session state before compression | <200ms |
+Three profiles (**quality** / **balanced** / **budget**) let you control cost. Planner always gets the best model. Mapper always gets the cheapest. Everything else scales with your budget.
+
+---
+
+### 4 hooks running under 50ms
+
+| Hook | What it does |
+|------|-------------|
+| **SessionStart** | Loads axioms + L0 memories. Checks if dream cycle is due. |
+| **UserPromptSubmit** | Scans your message for keywords, injects matching L1 rules. |
+| **PostToolUse** | Watches for correction patterns. Monitors context pressure. |
+| **PreCompact** | Saves session state before context compression wipes it. |
+
+All pattern matching. No LLM calls. The <50ms budget is sacred.
+
+---
 
 ### Production connectors
 
-Wire up Railway, Supabase, Vercel, Sentry, PostHog, Langfuse — then use `/yocode:diagnose` to cross-correlate across all of them.
+Wire up your infrastructure, then ask yocode to investigate across all of it.
 
-## Architecture
+**Supported:** Railway, Supabase, Vercel, Sentry, PostHog, Langfuse
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) — the complete design document with every research finding, decision, and rationale.
+`/yocode:connect` walks you through auth setup. `/yocode:diagnose` pulls from everything in parallel and cross-correlates. Error spike right after a deploy? It'll find it.
+
+---
 
 ## Philosophy
 
-- **Fix it if cost is ~0** — never defer when building is cheap
+These aren't aspirational. They're enforced by the axioms injected into every agent:
+
+- **Fix it if cost is ~0** — never defer when doing it right costs the same as doing it wrong
 - **Validate demand before engineering** — don't build what nobody asked for
-- **Source-grounded or don't say it** — no hallucinated confidence
+- **Source-grounded or don't say it** — no hallucinated confidence, ever
 - **Correct once, apply forever** — the self-improving core
-- **Infer, don't interrogate** — form assumptions, ask only for corrections
+- **Infer, don't interrogate** — read the code, form assumptions, ask only for corrections
 - **Think like a 100x engineer** — trace all consequences, ship complete work
 
-## License
+---
 
-MIT. See [LICENSE](LICENSE) and [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md) for attribution.
+## Architecture
+
+The full design — every research finding, every decision with rationale, every tradeoff — is in [ARCHITECTURE.md](ARCHITECTURE.md). It's 1,500 lines. It's thorough. If you want to understand *why* yocode works the way it does, start there.
+
+---
+
+## Acknowledgments
+
+yocode stands on the shoulders of great open-source tools. See [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md) for full attribution. Everything is MIT licensed.
+
+---
+
+<div align="center">
+
+**MIT License** · Built by [Yoel Gal](https://github.com/yoelgal) · Powered by Claude
+
+</div>
