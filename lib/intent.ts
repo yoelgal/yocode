@@ -54,7 +54,7 @@ const SIGNALS: SignalPattern[] = [
     mode: "diagnose",
     weight: 10,
     patterns: [
-      /\b(in prod|production|users? report|customers? say)\b/i,
+      /\b(in prod(uction)?|users? report|customers? (say|complain)|prod is)\b/i,
       /\b(check logs?|check metrics?|check health|check status)\b/i,
       /\b(incident|outage|down|degraded|slow response|latency spike)\b/i,
       /\b(alert|pager|on-?call|sentry|datadog)\b/i,
@@ -78,7 +78,7 @@ const SIGNALS: SignalPattern[] = [
     mode: "execute",
     weight: 8,
     patterns: [
-      /\b(go|do it|execute|run it|launch|start building|build it)\b/i,
+      /\b(let'?s go|do it|execute|run it|launch|start building|build it)\b/i,
       /\b(implement|carry out|proceed|let's go|ship it)\b/i,
       /\bplan (exists?|ready|approved|looks good|lgtm)\b/i,
       /\b(wave|worktree|parallel|swarm)\b.*\b(execute|launch|run)\b/i,
