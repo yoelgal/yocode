@@ -21,6 +21,12 @@
  *   yocode connectors status [--project <path>]
  *   yocode connectors detect [--project <path>]
  *   yocode connectors query <name> <capability> [--env <environment>]
+ *   yocode learn capture <what> <correct> [--why <reason>] [--context <ctx>]
+ *   yocode learn decide <decision> <rationale>
+ *   yocode learn staged
+ *   yocode learn approve <id>
+ *   yocode learn reject <id>
+ *   yocode learn clean
  *   yocode dream [--project <path>]
  *   yocode version
  */
@@ -57,6 +63,15 @@ import {
 } from "../lib/memory";
 
 import { classifyIntent, generatePreamble } from "../lib/intent";
+import {
+  captureCorrection,
+  captureDecision,
+  listStaged,
+  approveRule,
+  rejectRule,
+  cleanStaging,
+  summarizeCorrectionPatterns,
+} from "../lib/learning";
 import {
   loadConnectorConfig,
   getConnectorStatuses,
@@ -663,6 +678,94 @@ async function main(): Promise<void> {
       await dreamRun(getFlag("project"));
       break;
 
+    case "learn":
+      switch (subcommand) {
+        case "capture": {
+          const what = args[2] || "";
+          const correct = args[3] || "";
+          if (!what || !correct) {
+            console.error("Usage: yocode learn capture <what-was-wrong> <correct-approach> [--why <reason>]");
+            process.exit(1);
+          }
+          const result = await captureCorrection({
+            what,
+            correct,
+            why: getFlag("why"),
+            context: getFlag("context"),
+            timestamp: new Date().toISOString(),
+            projectRoot: findProjectRoot(),
+          });
+          if (result) {
+            printText(
+              result.autoApprovable
+                ? `Auto-approved: ${result.body.split("\n")[0]} (${result.scope})`
+                : `Staged for review: ${result.id} (${result.scope})`
+            );
+          } else {
+            printText("Skipped: duplicate of existing memory.");
+          }
+          break;
+        }
+        case "decide": {
+          const decision = args[2] || "";
+          const rationale = args[3] || "";
+          if (!decision || !rationale) {
+            console.error("Usage: yocode learn decide <decision> <rationale>");
+            process.exit(1);
+          }
+          const result = await captureDecision(decision, rationale, findProjectRoot());
+          if (result) {
+            printText(`Staged decision: ${result.id}`);
+          }
+          break;
+        }
+        case "staged": {
+          const staged = await listStaged();
+          if (staged.length === 0) {
+            printText("No pending staged rules.");
+          } else {
+            for (const r of staged) {
+              printText(`[${r.id}] (${r.scope}/${r.source}) ${r.body.split("\n")[0]}`);
+              printText(`  Confidence: ${r.confidence} | Auto-approvable: ${r.autoApprovable}`);
+              printText("");
+            }
+          }
+          break;
+        }
+        case "approve": {
+          const id = args[2];
+          if (!id) { console.error("Usage: yocode learn approve <id>"); process.exit(1); }
+          const path = await approveRule(id, findProjectRoot());
+          if (path) {
+            printText(`Approved → ${path}`);
+          } else {
+            printText(`Rule ${id} not found.`);
+          }
+          break;
+        }
+        case "reject": {
+          const id = args[2];
+          if (!id) { console.error("Usage: yocode learn reject <id>"); process.exit(1); }
+          await rejectRule(id);
+          printText(`Rejected: ${id}`);
+          break;
+        }
+        case "clean": {
+          const cleaned = await cleanStaging();
+          printText(`Cleaned ${cleaned} old staged rule(s).`);
+          break;
+        }
+        case "patterns": {
+          const summary = await summarizeCorrectionPatterns();
+          printText(summary);
+          break;
+        }
+        default:
+          console.error("Usage: yocode learn <capture|decide|staged|approve|reject|clean|patterns>");
+          process.exit(1);
+      }
+      break;
+
     case "version":
       printText(`yocode v${VERSION}`);
       break;
@@ -679,6 +782,14 @@ Commands:
   memory stage <body>         Stage a correction for review
   memory regen-index <dir>    Regenerate index.md
   memory validate-refs <dir>  Check for stale file references
+
+  learn capture <what> <fix>  Capture a correction
+  learn decide <what> <why>   Log a decision
+  learn staged                Show pending rules
+  learn approve <id>          Approve a staged rule
+  learn reject <id>           Reject a staged rule
+  learn clean                 Clean old staged rules
+  learn patterns              Summarize correction signals
 
   intent <message>            Classify intent (returns JSON)
   preamble                    Output system prompt preamble
