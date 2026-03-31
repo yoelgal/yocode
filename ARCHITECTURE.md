@@ -1449,11 +1449,23 @@ immediate fixes. The bootstrapping loop: build → hit friction → fix → repe
 20. Build /debug (from GSD, wire to connectors)
 21. Build /dream (from Auto-Dream, extend with three-tier + wiki-links)
 
-### Phase 5: Polish
+### Phase 5: Polish & Installation
 22. Lift design skills from gstack (/design-*, /office-hours)
 23. Lift /cso from gstack
-24. Build installer (install.sh, npx support)
-25. Write README for GitHub
+24. Build installer — study gstack's setup script (`sources/gstack/`) first, they do this
+    well. Lift what works. The installer should be invoked entirely by a single prompt the
+    user pastes into Claude Code. No manual steps. Claude clones the repo, runs the install,
+    registers hooks, compiles binaries, asks profile questions, and optionally onboards the
+    current project. The README quickstart section is literally just a prompt to paste.
+25. Write README for GitHub — the quickstart is a single Claude Code prompt:
+    ```
+    Install yocode: clone https://github.com/yoelgal/yocode, run the
+    installer, register hooks, build the browse daemon, and initialize
+    my global memory. Then set up my user profile — ask me a few
+    questions about how I work. If I'm in a project, detect the tech
+    stack and offer to onboard it. Fix anything that breaks.
+    ```
+    That's the entire getting started guide. One prompt, Claude handles everything.
 
 ---
 
