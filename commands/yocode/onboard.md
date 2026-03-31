@@ -101,11 +101,41 @@ Ask 3-5 targeted questions:
 
 Write responses to profile.md.
 
-### Step 6: Commit Initial State
+### Step 6: Update CLAUDE.md
+
+CLAUDE.md is Claude Code's project-level instruction file. yocode should have a
+section here so every Claude session knows the system is active.
+
+1. Read existing CLAUDE.md (if any)
+2. Check if it already has a yocode section — skip if so
+3. Add a yocode section using the template at `~/.yocode/templates/project-claude-md.md`
+4. If CLAUDE.md has existing tool sections (GSD, gstack, Paul, etc.):
+   - Ask: "I see you have [tool] instructions in CLAUDE.md. Want to migrate them to yocode? (/yocode:migrate)"
+5. If CLAUDE.md doesn't exist, create it with:
+   - The yocode section
+   - Any project-specific conventions discovered in Step 1-2
+
+**Also add discovered conventions to CLAUDE.md:**
+The mapper agents found naming patterns, test commands, build commands, etc.
+Add these as project instructions so Claude follows them in every session:
+
+```markdown
+## Project Conventions
+
+- Test command: `bun test`
+- Build command: `bun run build`
+- Naming: camelCase for variables, PascalCase for types
+- Error handling: [pattern discovered by convention miner]
+```
+
+### Step 7: Commit Initial State
 
 ```bash
-git add .yocode/
-git commit -m "init: yocode project onboarding"
+git add .yocode/ CLAUDE.md
+git commit -m "init: yocode project onboarding
+
+Analyzed codebase, extracted conventions, seeded memory.
+Added yocode section to CLAUDE.md."
 ```
 
 Report what was discovered and what memories were seeded.
