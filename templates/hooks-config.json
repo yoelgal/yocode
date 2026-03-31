@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": ".*",
+        "command": "~/.yocode/bin/hooks/session-start.sh"
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": ".*",
+        "command": "~/.yocode/bin/hooks/inject-context.sh"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "command": "~/.yocode/bin/hooks/observe.sh"
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": ".*",
+        "command": "~/.yocode/bin/hooks/pre-compact-dream.sh"
+      }
+    ]
+  }
+}
