@@ -10,6 +10,17 @@ These rules exist because AI agents have a systematic failure mode: they create
 ambitious plans, implement 70-80% of the items, then declare victory by summarizing
 what was done while quietly dropping the rest. This is not acceptable.
 
+## Boil the Lake
+
+Garry Tan's "Boil the Lake" principle: with AI, the marginal cost of completeness
+is near zero. The difference between 80% and 100% used to cost weeks — now it costs
+minutes. So always do the complete thing. Not the MVP. Not the "good enough." The
+complete, finished, polished thing.
+
+A lake is boilable. An ocean is not. Before starting, determine if the work is a
+lake (achievable with effort) or an ocean (requires a multi-quarter migration). If
+it's a lake, boil it. Don't stop at warm.
+
 ## The Completion Contract
 
 1. **PLANS ARE PROMISES** — When you produce a plan with N items, you are committing
