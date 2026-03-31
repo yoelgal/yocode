@@ -77,6 +77,7 @@ import {
   buildExecutionPlan,
   generateWaveInstructions,
 } from "../lib/orchestrator";
+import { healthCheckAll } from "../lib/connector-clients";
 import {
   loadConnectorConfig,
   getConnectorStatuses,
@@ -712,6 +713,22 @@ async function main(): Promise<void> {
         case "status":
           await connectorsStatus(getFlag("project"));
           break;
+        case "health": {
+          const project = getFlag("project") || findProjectRoot();
+          const config = await loadConnectorConfig(project);
+          if (!config || Object.keys(config.connectors).length === 0) {
+            printText("No connectors configured. Run /yocode:connect first.");
+            break;
+          }
+          const checks = await healthCheckAll(config.connectors);
+          for (const check of checks) {
+            const icon = check.status === "up" ? "✓" : check.status === "degraded" ? "⚠" : "✗";
+            printText(`${icon} ${check.name}: ${check.status} (${check.latencyMs}ms) — ${check.details}`);
+          }
+          const allUp = checks.every((c) => c.status === "up");
+          printText(`\nOverall: ${allUp ? "HEALTHY" : "ISSUES DETECTED"}`);
+          break;
+        }
         case "detect":
           await connectorsDetect(getFlag("project"));
           break;
