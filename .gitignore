@@ -26,5 +26,8 @@ bun.lockb
 bin/browse
 bin/yocode
 
+# Bun build cache
+*.bun-build
+
 # Connector auth (contains secrets, but not our template)
 /connectors.json
