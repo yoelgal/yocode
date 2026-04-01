@@ -46,7 +46,12 @@ repositories are MIT licensed. This section provides attribution as required.
 ### Ruflo
 - **Repo:** https://github.com/ruvnet/ruflo
 - **License:** MIT
-- **What we drew from:** Agent definition format patterns, model routing concepts
+- **What we drew from:** Researched for agent definition patterns and swarm
+  topologies. Ultimately did not lift code or methodology — GSD's agent
+  architecture and wave execution model covered the same ground with more
+  mature implementations. Ruflo's 3-tier model routing concept (WASM/Haiku/Opus)
+  influenced our thinking about cost optimization, though our model profiles
+  derive from GSD's implementation.
 
 ### claude-mem
 - **Repo:** https://github.com/thedotmack/claude-mem
