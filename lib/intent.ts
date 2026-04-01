@@ -55,7 +55,7 @@ const SIGNALS: SignalPattern[] = [
     weight: 10,
     patterns: [
       /\b(in prod(uction)?|users? report|customers? (say|complain)|prod is)\b/i,
-      /\b(check logs?|check metrics?|check health|check status)\b/i,
+      /\bcheck\b.*?\b(logs?|metrics?|health|status)\b/i,
       /\b(incident|outage|down|degraded|slow response|latency spike)\b/i,
       /\b(alert|pager|on-?call|sentry|datadog)\b/i,
     ],

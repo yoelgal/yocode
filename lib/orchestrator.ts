@@ -191,6 +191,21 @@ function parseTasksSection(text: string): PlanTask[] {
   return tasks;
 }
 
+/** Parse dependency references from task descriptions (e.g., "depends on Task 1", "after task-1") */
+function parseDependsOn(description: string, allTasks: PlanTask[]): string[] {
+  const deps: string[] = [];
+  // Match "depends on Task N", "after Task N", "requires Task N"
+  const depMatches = description.matchAll(/(?:depends on|after|requires)\s+(?:task[- ]?)(\d+)/gi);
+  for (const match of depMatches) {
+    const taskNum = parseInt(match[1]);
+    const depId = `task-${taskNum}`;
+    if (allTasks.some((t) => t.id === depId)) {
+      deps.push(depId);
+    }
+  }
+  return deps;
+}
+
 // ─── Orchestrator ────────────────────────────────────────────────────────────
 
 /**
@@ -213,7 +228,7 @@ export async function buildExecutionPlan(
     name: t.name,
     description: t.description,
     files: t.files,
-    dependsOn: [], // TODO: parse from plan if specified
+    dependsOn: parseDependsOn(t.description, plan.tasks),
     wave: t.wave,
     agent: "executor" as AgentRole,
   }));
@@ -234,10 +249,16 @@ export async function buildExecutionPlan(
     const mergeCmds: string[] = [];
     const cleanupCmds: string[] = [];
 
-    // Check for file conflicts
+    // Check for file conflicts — make conflicting tasks sequential
     const conflicts = detectFileConflicts(wave);
     if (conflicts.length > 0) {
-      // TODO: handle by making conflicting tasks sequential
+      for (const conflict of conflicts) {
+        // Add dependency: taskB depends on taskA (makes them sequential)
+        const taskB = wave.tasks.find((t) => t.id === conflict.taskB);
+        if (taskB && !taskB.dependsOn.includes(conflict.taskA)) {
+          taskB.dependsOn.push(conflict.taskA);
+        }
+      }
     }
 
     for (const task of wave.tasks) {
@@ -407,7 +428,9 @@ export async function unifyExecution(
         wave: 1,
         tasks: results,
         mergeOrder: results.filter((r) => r.commit).map((r) => r.commit!),
-        testsPassed: true, // TODO: track actual test results
+        testsPassed: results.every(
+          (r) => r.status === "DONE" || r.status === "DONE_WITH_CONCERNS"
+        ),
       },
     ],
     overallStatus: results.every(

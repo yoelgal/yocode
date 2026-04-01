@@ -1100,6 +1100,10 @@ auto-generated. Memories are learned, scoped, JIT-loaded.
 | `/yocode:explore` | Seed | Type-driven ideation, quality gates |
 | `/yocode:dream` | Auto-Dream | Memory consolidation (extend with 3-tier + wiki-links) |
 | `/yocode:learn` | gstack + CARL | Review, search, prune, stage memories |
+| `/yocode:plan-review` | gstack | Three-lens review: CEO (scope), Engineer (architecture), Designer (UX) |
+| `/yocode:setup-cookies` | gstack | Browser cookie import from Chrome/Arc/Brave/Edge |
+| `/yocode:tidy` | New | Archive completed phases, clean stale state, reclaim disk |
+| `/yocode:init` | New | Per-project initialization, stack detection, onboard offer |
 
 ### 9.2 New Skills (Not in Any Source Repo)
 
