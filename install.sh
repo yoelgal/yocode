@@ -91,44 +91,33 @@ if ! grep -q "session-start.sh" "$CLAUDE_SETTINGS" 2>/dev/null; then
 
   # Merge hooks using a small inline script
   # This preserves existing hooks while adding yocode's
-  if command -v bun &>/dev/null; then
-    bun -e "
-      const fs = require('fs');
-      const settings = JSON.parse(fs.readFileSync('${CLAUDE_SETTINGS}', 'utf-8'));
-      const hooks = JSON.parse(fs.readFileSync('${YOCODE_HOME}/templates/hooks-config.json', 'utf-8'));
+  MERGE_SCRIPT='
+    const fs = require("fs");
+    const settings = JSON.parse(fs.readFileSync(process.argv[2], "utf-8"));
+    const newHooks = JSON.parse(fs.readFileSync(process.argv[3], "utf-8"));
 
-      if (!settings.hooks) settings.hooks = {};
+    if (!settings.hooks) settings.hooks = {};
 
-      for (const [event, eventHooks] of Object.entries(hooks.hooks)) {
-        if (!settings.hooks[event]) settings.hooks[event] = [];
-        // Add yocode hooks if not already present
-        for (const hook of eventHooks) {
-          const exists = settings.hooks[event].some(h => h.command === hook.command);
-          if (!exists) settings.hooks[event].push(hook);
-        }
+    for (const [event, eventEntries] of Object.entries(newHooks.hooks)) {
+      if (!settings.hooks[event]) settings.hooks[event] = [];
+      for (const entry of eventEntries) {
+        // Check if this hook command is already registered
+        const cmd = entry.hooks[0].command;
+        const exists = settings.hooks[event].some(e =>
+          e.hooks && e.hooks.some(h => h.command === cmd)
+        );
+        if (!exists) settings.hooks[event].push(entry);
       }
+    }
 
-      fs.writeFileSync('${CLAUDE_SETTINGS}', JSON.stringify(settings, null, 2));
-    "
+    fs.writeFileSync(process.argv[2], JSON.stringify(settings, null, 2));
+  '
+
+  if command -v bun &>/dev/null; then
+    bun -e "$MERGE_SCRIPT" -- "$CLAUDE_SETTINGS" "${YOCODE_HOME}/templates/hooks-config.json"
     echo "✓ Registered hooks in Claude settings"
   elif command -v node &>/dev/null; then
-    node -e "
-      const fs = require('fs');
-      const settings = JSON.parse(fs.readFileSync('${CLAUDE_SETTINGS}', 'utf-8'));
-      const hooks = JSON.parse(fs.readFileSync('${YOCODE_HOME}/templates/hooks-config.json', 'utf-8'));
-
-      if (!settings.hooks) settings.hooks = {};
-
-      for (const [event, eventHooks] of Object.entries(hooks.hooks)) {
-        if (!settings.hooks[event]) settings.hooks[event] = [];
-        for (const hook of eventHooks) {
-          const exists = settings.hooks[event].some(h => h.command === hook.command);
-          if (!exists) settings.hooks[event].push(hook);
-        }
-      }
-
-      fs.writeFileSync('${CLAUDE_SETTINGS}', JSON.stringify(settings, null, 2));
-    "
+    node -e "$MERGE_SCRIPT" -- "$CLAUDE_SETTINGS" "${YOCODE_HOME}/templates/hooks-config.json"
     echo "✓ Registered hooks in Claude settings"
   else
     echo "⚠ Neither bun nor node found. Add hooks manually from:"
@@ -140,13 +129,8 @@ fi
 
 # ─── Step 8: Initialize global memory ────────────────────────────────────────
 
-if [[ ! -f "${YOCODE_HOME}/memory/global/index.md" ]]; then
-  cp "${YOCODE_HOME}/memory/global/index.md" "${YOCODE_HOME}/memory/global/index.md" 2>/dev/null || true
-fi
-
-if [[ ! -f "${YOCODE_HOME}/memory/global/profile.md" ]]; then
-  cp "${YOCODE_HOME}/memory/global/profile.md" "${YOCODE_HOME}/memory/global/profile.md" 2>/dev/null || true
-fi
+# Files are already in place from the cloned repo
+echo "✓ Global memory in place"
 
 # Initialize dream state
 if [[ ! -f "${YOCODE_HOME}/.dream-state" ]]; then
