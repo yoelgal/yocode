@@ -37,7 +37,18 @@ include it and silently hope it gets skipped during execution.
 - Use Assumptions Mode: form assumptions with confidence levels, ask only for corrections
 - Identify the full scope and blast radius
 
-## 2. Define Acceptance Criteria
+## 2. Run the Skeptic
+
+For every feature in the plan, ask "how does this break?" BEFORE defining tasks:
+- Every API call: timeout, error, unexpected data, service down
+- Every state change: partial success, duplicate call, race condition
+- Every user flow: loading, error, empty, edge cases, disconnection
+- Downstream: what else reads this data, what caches invalidate, what triggers
+
+The plan MUST include a failure_handling section. A plan with only happy paths
+is not a plan — it's a wish.
+
+## 3. Define Acceptance Criteria
 
 Every plan has acceptance criteria in BDD format:
 

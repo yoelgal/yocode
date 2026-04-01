@@ -59,7 +59,42 @@ When [action]
 Then [expected outcome]
 ```
 
-### Step 3: Break Into Tasks
+### Step 3: Run the Skeptic (mandatory)
+
+Before breaking into tasks, stress-test the plan against failure scenarios.
+For EVERY external call, state change, and user flow in the plan:
+
+**External calls (APIs, DB, services):**
+- What if it times out? What if it errors? What if it returns unexpected data?
+- Specify the handling: retry with backoff, degrade gracefully, show error with action.
+
+**State changes (writes, cache updates, queue pushes):**
+- What if it partially succeeds? What if it's called twice? What if there's a race condition?
+- Specify: transactions, idempotency keys, optimistic locking, or document why not needed.
+
+**User flows:**
+- What does the user see loading? On error? Empty state? Too much data?
+- What if they navigate away mid-operation? Retry immediately? Lose connection?
+
+**Downstream effects:**
+- What else reads this data? What caches does this invalidate? What events trigger?
+- Trace forward from every change to everything it touches.
+
+Add a `<failure_handling>` section to the plan:
+```markdown
+<failure_handling>
+| Scenario | Handling |
+|----------|---------|
+| Payment API timeout | Retry 3x with exponential backoff, show "processing" to user |
+| Duplicate webhook delivery | Idempotency key on event_id, skip if already processed |
+| User navigates away during upload | Resume on return via chunked upload with progress stored |
+| DB migration on large table | Online DDL, no table lock, tested on staging first |
+</failure_handling>
+```
+
+This is NOT optional. A plan without failure handling is not a plan.
+
+### Step 4: Break Into Tasks
 
 Rules for task granularity:
 - A task is correctly scoped when ONE agent can trace every consequence

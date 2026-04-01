@@ -56,6 +56,10 @@ Before writing any code:
 - Grep for stale references to anything you renamed/moved/deleted
 - Check that all imports resolve
 - Verify type coherence through the chain
+- **Check failure handling:** If the plan has a `<failure_handling>` section,
+  verify EACH scenario is actually implemented — not just the happy path.
+  Timeouts set? Error states rendered? Idempotency keys in place? If any
+  failure scenario from the plan is missing in the code, it's not done.
 
 ## 4. Commit
 
