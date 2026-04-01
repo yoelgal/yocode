@@ -55,6 +55,7 @@ git clone https://github.com/yoelgal/yocode.git ~/.yocode && ~/.yocode/install.s
 |---------|-------------|
 | `/yocode:explore` | Open-ended brainstorming with a seed system for ideas that aren't actionable yet |
 | `/yocode:plan` | Assumptions Mode — reads your code, forms assumptions, asks only for corrections |
+| `/yocode:plan-review` | Three-lens review: CEO (scope), Engineer (architecture), Designer (UX). One pass. |
 | `/yocode:execute` | Parallel agents in isolated worktrees, wave-based execution, mandatory reconciliation |
 | `/yocode:quick` | No ceremony. Just do the thing. Still benefits from memory. |
 | `/yocode:debug` | Gather → hypothesize → verify → fix → persist to knowledge base |
