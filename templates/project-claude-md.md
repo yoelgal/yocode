@@ -1,101 +1,98 @@
 # yocode
 
 This project uses yocode as its ONLY workflow system. If you see sections in
-this file for gstack, GSD, Paul, or other tools — they are stale and should be
+this file for gstack, GSD, Paul, or other tools — they are stale and MUST be
 removed. Run `/yocode:migrate` to consolidate their knowledge and clean up.
+
+## HARD RULES (never violate these)
+
+1. **NEVER use `mcp__claude-in-chrome__*` tools.** For ALL browser interaction,
+   use the `/yocode:browse` skill which uses the headless browse daemon. This
+   includes QA testing, dogfooding, screenshots, form testing, everything.
+   If you catch yourself about to call any `mcp__claude-in-chrome__*` tool, STOP
+   and use `/yocode:browse` instead.
+
+2. **ALWAYS write memories to yocode's memory system**, not Claude Code's native
+   memory. Corrections, rules, decisions, feedback — all go to:
+   - Project-specific: `.yocode/memory/rules/` or `.yocode/memory/decisions/`
+   - Stack-specific: `~/.yocode/memory/stacks/<stack>/`
+   - Global: `~/.yocode/memory/global/rules/`
+   Use the CLI: `~/.yocode/bin/yocode.ts memory add "<rule>" --scope <scope>`
+   or `~/.yocode/bin/yocode.ts learn capture "<what>" "<correction>"`.
+   Do NOT use Claude Code's auto-memory system for anything yocode should own.
+
+3. **NEVER leave old tool state in place.** If `.planning/`, `.paul/`, `.carl/`,
+   `.base/`, or `.claude/skills/gstack/` exist, run `/yocode:migrate` before
+   doing anything else. If this CLAUDE.md has sections for gstack or GSD,
+   those sections must be removed after migration.
+
+## How It Works
 
 The system loads automatically via hooks — axioms, memory rules, and intent
 classification inject on every message. You don't need to type commands. Just talk.
 
-## How Conversations Become Workflows
+## Conversation → Mode Routing
 
-Classify the user's intent from their message and respond in the appropriate
-mode. Do NOT announce mode changes — just behave accordingly. Slash commands
-exist as explicit overrides but the 90% case is natural conversation.
-
-### Conversation → Mode Routing
+Classify the user's intent and respond in the appropriate mode.
+Do NOT announce mode changes — just behave accordingly.
 
 **"I have an idea..." / "What if..." / "Should we..."**
-→ EXPLORE mode. Brainstorm freely. Log decisions if made. Auto-seed ideas
-that aren't actionable yet. If the idea crystallizes, transition to PLAN.
+→ EXPLORE. Brainstorm freely. Auto-seed tangent ideas silently.
 
 **"Build X" / "Add Y" / "I need a feature that..."**
-→ PLAN mode. Use Assumptions Mode: read 5-15 source files, form assumptions
-with confidence levels, ask only for corrections. Produce acceptance criteria.
-Scan seeds for relevant prior ideas. Auto-seed anything deferred.
+→ PLAN. Assumptions Mode → acceptance criteria → skeptic failure analysis → waves.
 
 **"Let me review this plan" / "Is this plan solid?"**
-→ PLAN-REVIEW mode. Three lenses: CEO (scope + vision), Engineer (architecture
-+ correctness), Designer (UX + visual quality). Interactive, one issue at a time.
+→ PLAN-REVIEW. CEO + Engineer + Designer lenses. Interactive.
 
-**"Go" / "Do it" / "Execute" / "Launch"**
-→ EXECUTE mode. Confirm scope, then wave execution with parallel agents.
-Mandatory UNIFY at the end. Auto-seed any deferred items.
+**"Go" / "Do it" / "Execute"**
+→ EXECUTE. Parallel agents in worktrees. Mandatory UNIFY. Requires confirmation.
 
-**"Just rename X" / "Quickly fix Y" / "Change this one thing"**
-→ QUICK mode. No planning docs. Just do it. Still benefits from memory and axioms.
+**"Just rename X" / "Quickly fix Y"**
+→ QUICK. No ceremony. Still uses axioms and memory.
 
-**"This is broken" / "Error:" / "Not working" / stack traces**
-→ DEBUG mode. Check knowledge base first. Gather → Hypothesize → Verify → Fix
-→ Persist. Auto-seed deeper fixes that got patched instead of properly solved.
+**"This is broken" / errors / stack traces**
+→ DEBUG. Knowledge base → gather → hypothesize → verify → fix → persist.
 
-**"Users are reporting..." / "Check prod" / "Is the API down?"**
-→ DIAGNOSE mode. Pull from all connected systems, correlate, surface anomalies.
+**"Users reporting..." / "Check prod"**
+→ DIAGNOSE. Pull from all connected systems, correlate.
 
-**"Ship it" / "Create a PR" / "Deploy" / "Push"**
-→ SHIP mode. Full pipeline: merge base → test → review → version → changelog → PR.
-Requires confirmation before proceeding (high-risk mode).
+**"Ship it" / "Create a PR"**
+→ SHIP. Test → review → version → changelog → PR. Requires confirmation.
 
-**"How'd this week go?" / "What did we ship?" / "Retro"**
-→ RETRO mode. Analyze commits, patterns, trends. Compare with history.
+**"QA this" / "Test the site" / "Does it work?"**
+→ QA. Use `/yocode:browse` to navigate the site. NEVER Claude in Chrome.
 
-**"What if we added dark mode?" (during brainstorming)**
-→ Stay in EXPLORE. Auto-seed the idea.
+**"How'd this week go?" / "Retro"**
+→ RETRO. Commit analysis, metrics, trends.
 
-**Ambiguous or unclear?**
-→ Default to EXPLORE. It's the safest — no irreversible actions.
+**Ambiguous?** → Default to EXPLORE.
 
-### Automatic Behaviors (No Commands Needed)
+## Automatic Behaviors
 
-These happen silently in the background:
+These happen silently:
+- Memory rules inject when keywords match (L1 JIT loading)
+- Corrections are captured and staged as permanent rules (in yocode memory)
+- Ideas are auto-seeded during plan/explore/debug/execute
+- Seeds surface when starting new work that matches their trigger
+- Context pressure warnings at 35% and 25% remaining
 
-- **Memory loading** — axioms and L0 rules inject every session. L1 rules inject
-  when keywords in your message match. You never ask for this.
-- **Correction capture** — when you correct something, it's staged as a memory rule.
-  Low-risk project corrections auto-approve. Global rules need review.
-- **Seed capture** — deferred ideas, out-of-scope items, tangent thoughts are
-  auto-seeded during plan/explore/debug/execute. They surface when relevant.
-- **Seed surfacing** — when starting new work, matching seeds from prior sessions
-  appear automatically.
-- **Context pressure** — at 35% remaining context, you'll see a warning. At 25%,
-  a critical alert to commit and compact.
-- **Dream trigger** — after 24h + 5 sessions, you'll see a suggestion to run
-  memory consolidation.
+## Browser Interaction
 
-### When Commands Are Useful
-
-Slash commands override the automatic routing. Use them when:
-- You want a specific workflow that conversation routing might not trigger
-- You want to force a mode (e.g., `/yocode:plan-review` on a plan you're reading)
-- You want to run a standalone tool (e.g., `/yocode:cso` for a security audit)
-- You want to manage the system itself (e.g., `/yocode:learn`, `/yocode:tidy`)
-
-### The Developer's Journey (All Conversation-Driven)
-
-```
-"I've got an idea for..."        → Explore → seeds planted
-"OK let's build it"              → Plan → assumptions → acceptance criteria
-"Is this plan good?"             → Plan Review → CEO + Eng + Design lenses
-"Go"                             → Execute → parallel agents → UNIFY
-"This looks broken"              → Debug → knowledge base → fix → persist
-"Ship it"                        → Ship → test → review → PR
-"How'd this week go?"            → Retro → metrics → trends
-"Something's wrong in prod"      → Diagnose → cross-system correlation
+For ANY browser interaction (QA, dogfooding, screenshots, testing):
+```bash
+B="${HOME}/.yocode/browse/dist/browse"
+$B goto <url>              # Navigate
+$B snapshot -i             # Interactive elements
+$B click @e3               # Click by ref
+$B fill @e5 "text"         # Fill input
+$B screenshot              # Capture
 ```
 
-No commands memorized. No workflows to learn. Just talk about what you need.
+NEVER use `mcp__claude-in-chrome__*`. NEVER. Use the browse daemon.
 
 ## State
 
-`.yocode/` contains project state. `~/.yocode/` contains global memory.
-Both are managed automatically. Run `/yocode:tidy` periodically to clean up.
+`.yocode/` — project state and memory
+`~/.yocode/` — global memory and axioms
+Both managed automatically. Run `/yocode:tidy` to clean up.
