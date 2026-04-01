@@ -38,6 +38,19 @@ find ~/.yocode/memory/stacks/ -name "*.md" 2>/dev/null | wc -l
 find .yocode/memory/ -name "*.md" 2>/dev/null | wc -l
 ```
 
+Also scan Claude Code's native memory for new entries since last dream:
+```bash
+# Claude Code accumulates memories here independently of yocode
+find ~/.claude/projects/*/memory/ -name "*.md" -newer ~/.yocode/.dream-state 2>/dev/null
+```
+
+Any new Claude Code memories found should be:
+1. Read and classified (user/feedback/project/reference)
+2. Checked for duplicates against yocode's existing memories
+3. If new: imported into the appropriate yocode tier
+4. This keeps yocode's memory as the single source of truth even when
+   Claude Code's auto-memory captures things independently
+
 ## Phase 2: Gather Signal
 
 Scan session transcripts and tool logs for:

@@ -128,10 +128,57 @@ For each detected source, extract knowledge into yocode's format:
 - `workspace.json` → extract operator profile → `~/.yocode/memory/global/profile.md`
 - `state.json` → extract drift indicators, groom cadence → project memory
 
-**Auto-memory (~/.claude/projects/*/memory/):**
-- Read MEMORY.md index
-- Read each topic file (preferences.md, decisions.md, corrections.md, etc.)
-- Classify: project-specific stays project, universal → global, tech-specific → stack
+**Claude Code auto-memory (~/.claude/projects/*/memory/):**
+
+This is often the RICHEST source — it's what Claude has been learning about you
+and your projects organically across every session. It accumulates corrections,
+preferences, project facts, and feedback without you explicitly saving anything.
+
+1. Find the memory directory for this project:
+   ```bash
+   # Claude Code stores memories per-project by path hash
+   ls ~/.claude/projects/*/memory/MEMORY.md 2>/dev/null
+   ```
+
+2. Read MEMORY.md (the index — typically under 200 lines):
+   - Each line is a pointer to a topic file with a one-line description
+   - Parse every entry to understand what's been remembered
+
+3. Read EVERY topic file referenced in MEMORY.md:
+   - `user_*.md` → user preferences, role, working style → `~/.yocode/memory/global/profile.md`
+   - `feedback_*.md` → corrections, "don't do X" rules → classify by scope, stage as rules
+   - `project_*.md` → project-specific facts, decisions → `.yocode/memory/decisions/`
+   - `reference_*.md` → external system pointers → `.yocode/memory/rules/`
+
+4. For each memory file, read the frontmatter:
+   ```yaml
+   ---
+   name: memory-name
+   description: one-line description
+   type: user | feedback | project | reference
+   ---
+   ```
+
+5. Classify each by scope:
+   - `type: user` → almost always global (it's about the person, not the project)
+   - `type: feedback` → check content: does it reference a specific tech? → stack. Generic? → global. This project only? → project.
+   - `type: project` → usually project-scoped, but check: if it says "always do X" without project context → might be global
+   - `type: reference` → keep as-is, convert to yocode rule format
+
+6. Deduplicate against existing yocode memories (the user may have already captured some of these via corrections)
+
+7. **Important: Ask about Claude Code's own memory going forward.**
+   After migration, yocode and Claude Code both maintain memories. Options:
+   - **A) Consolidate into yocode only** — yocode's three-tier system is richer. Move everything to `.yocode/memory/` and `~/.yocode/memory/`. Claude Code's auto-memory continues to accumulate but yocode's dream cycle periodically consolidates new entries.
+   - **B) Keep both** — Claude Code's memories stay where they are. yocode manages its own. Risk: duplicate/contradicting rules.
+   - **Recommend A** — one source of truth is better than two.
+
+   If the user chooses A, add a note to CLAUDE.md:
+   ```markdown
+   ## Memory
+   This project uses yocode for memory management. Corrections and rules
+   are stored in .yocode/memory/ (project) and ~/.yocode/memory/ (global).
+   ```
 
 ### Custom/scattered documentation (smart extraction)
 
