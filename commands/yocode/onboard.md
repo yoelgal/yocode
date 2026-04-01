@@ -20,7 +20,35 @@ Runs automatically on first use in a new project, or explicitly via `/yocode:onb
 
 ## Process
 
-### Step 0: Initialize Project
+### Step 0: Detect and Migrate Existing Tools (MANDATORY — run BEFORE anything else)
+
+Check for existing workflow tool state. This is NOT optional — if other tools
+are present and you skip this, the user ends up with competing systems.
+
+```bash
+echo "=== Checking for existing workflow tools ==="
+ls -d .planning/ 2>/dev/null && echo "FOUND: GSD (.planning/)"
+ls -d .paul/ 2>/dev/null && echo "FOUND: Paul (.paul/)"
+ls -d .carl/ 2>/dev/null && echo "FOUND: CARL (.carl/)"
+ls -d .base/ 2>/dev/null && echo "FOUND: BASE (.base/)"
+ls -d .claude/skills/gstack/ 2>/dev/null && echo "FOUND: gstack (.claude/skills/gstack/)"
+ls ~/.gstack/ 2>/dev/null && echo "FOUND: gstack global (~/.gstack/)"
+grep -l "gsd\|gstack\|/paul\|\.carl\|\.base" CLAUDE.md 2>/dev/null && echo "FOUND: tool references in CLAUDE.md"
+```
+
+**If ANY tools are found:**
+1. Tell the user what was found
+2. Run `/yocode:migrate` FIRST — this extracts knowledge, cleans up old state,
+   and removes stale CLAUDE.md sections
+3. Only THEN proceed with onboarding
+
+Do NOT just append a yocode section to CLAUDE.md while leaving gstack/GSD
+sections in place. That creates competing instruction sets. Migration MUST
+happen first.
+
+**If no tools found:** proceed to Step 1.
+
+### Step 1: Initialize Project
 
 ```bash
 mkdir -p .yocode/memory/rules .yocode/memory/decisions .yocode/debug

@@ -1,8 +1,11 @@
 # yocode
 
-This project uses yocode. The system loads automatically via hooks — axioms,
-memory rules, and intent classification inject on every message. You don't
-need to type commands. Just talk.
+This project uses yocode as its ONLY workflow system. If you see sections in
+this file for gstack, GSD, Paul, or other tools — they are stale and should be
+removed. Run `/yocode:migrate` to consolidate their knowledge and clean up.
+
+The system loads automatically via hooks — axioms, memory rules, and intent
+classification inject on every message. You don't need to type commands. Just talk.
 
 ## How Conversations Become Workflows
 
