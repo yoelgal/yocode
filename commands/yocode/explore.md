@@ -55,6 +55,19 @@ priority: [high | medium | low]
 
 Seeds are scanned when starting new work. Relevant seeds surface automatically.
 
+**Auto-seeding:** During exploration, automatically capture ideas as seeds when:
+- The user says "that's interesting but not now"
+- An idea branches off the main discussion but isn't the focus
+- You identify a follow-up opportunity the user hasn't mentioned
+- The conversation produces "what if" ideas that aren't immediately actionable
+
+Don't ask — just seed them silently via the CLI:
+```bash
+~/.yocode/bin/yocode.ts seed add "<title>" "<description>" --trigger "<when relevant>"
+```
+
+The user will see them surface naturally in future sessions.
+
 ### Quality Gate for Graduation
 
 Before transitioning to PLAN mode, verify:

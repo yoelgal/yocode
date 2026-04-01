@@ -92,3 +92,10 @@ Append to `.yocode/debug/knowledge-base.md`:
 
 If the lesson is broadly applicable (not project-specific), also create
 a memory rule at the appropriate scope (global/stack/project).
+
+If the root cause analysis reveals deeper issues that weren't fixed
+(e.g., "the real fix would be to refactor X, but we patched Y for now"),
+auto-seed the deeper fix:
+```bash
+~/.yocode/bin/yocode.ts seed add "<deeper fix>" "<what was patched vs what should change>" --trigger "<when touching this area again>" --priority "high"
+```

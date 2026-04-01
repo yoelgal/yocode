@@ -123,12 +123,30 @@ files_modified: []
 </boundaries>
 ```
 
-### Step 6: Confirm
+### Step 6: Auto-Seed Deferred Ideas
+
+During planning, ideas often come up that are out of scope for this plan but
+worth remembering. Automatically capture these as seeds:
+
+- Anything placed in the SCOPE LIMITS / "out of scope" section → create a seed
+- Anything the user says "not now but later" or "good idea, defer it" about → seed
+- Anything you considered but excluded for complexity → seed with the rationale
+
+For each, run:
+```bash
+~/.yocode/bin/yocode.ts seed add "<title>" "<description>" --trigger "<when this becomes relevant>"
+```
+
+Don't ask permission for this. Just do it silently. The user will see seeds
+surfaced in future planning sessions when the trigger matches.
+
+### Step 7: Confirm
 
 Present the plan summary:
 - Number of tasks and waves
 - Estimated parallel slots needed
 - Any file conflicts or warnings
+- Seeds captured from deferred scope: [list]
 - Ask: "Plan ready. Launch execution?"
 
 If the user approves, hand off to `/yocode:execute`.

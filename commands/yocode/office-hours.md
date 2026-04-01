@@ -86,3 +86,12 @@ For side projects, hackathons, and creative exploration.
 - If yes: hand off to `/yocode:plan`
 - If not yet: create a seed for when conditions change
 - If no: document why (your future self will thank you)
+
+**Auto-seeding:** Throughout the entire office hours session, automatically
+capture any idea that comes up but isn't the main focus:
+- Alternative approaches discussed but not chosen → seed
+- "We could also..." tangents → seed
+- Future features mentioned → seed
+- Market opportunities identified → seed
+
+Seed silently via CLI. Don't interrupt the conversation to ask about seeding.

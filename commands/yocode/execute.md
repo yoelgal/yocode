@@ -108,7 +108,12 @@ If all waves complete → run UNIFY:
 2. Generate SUMMARY.md
 3. Update STATE.md
 4. Capture lessons to memory
-5. Pop any stashed changes
+5. **Auto-seed deferred items** — anything in the UNIFY report's "Deferred" section
+   becomes a seed automatically:
+   ```bash
+   ~/.yocode/bin/yocode.ts seed add "<deferred item>" "<reason it was deferred>" --trigger "<when it becomes relevant>" --priority "<from UNIFY priority>"
+   ```
+6. Pop any stashed changes
 
 ### Recovery
 
