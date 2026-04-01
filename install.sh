@@ -45,26 +45,33 @@ mkdir -p "${CLAUDE_DIR}/commands/yocode"
 echo "✓ Created directory structure"
 
 # ─── Step 3: Copy agents ─────────────────────────────────────────────────────
+# (Skip if repo was cloned directly to ~/.yocode — files are already in place)
 
-cp "${YOCODE_HOME}/agents/"*.md "${YOCODE_HOME}/agents/" 2>/dev/null || true
-echo "✓ Installed agent definitions"
+echo "✓ Agent definitions in place"
 
-# ─── Step 4: Copy axioms ─────────────────────────────────────────────────────
+# ─── Step 4: Copy axioms to memory/global/axioms/ ────────────────────────────
 
-cp "${YOCODE_HOME}/axioms/"*.md "${YOCODE_HOME}/memory/global/axioms/"
+for axiom in "${YOCODE_HOME}/axioms/"*.md; do
+  [[ -f "$axiom" ]] || continue
+  dest="${YOCODE_HOME}/memory/global/axioms/$(basename "$axiom")"
+  # Only copy if source and dest differ
+  if [[ "$(realpath "$axiom" 2>/dev/null)" != "$(realpath "$dest" 2>/dev/null)" ]]; then
+    cp "$axiom" "$dest"
+  fi
+done
 echo "✓ Installed axioms"
 
 # ─── Step 5: Install hooks ───────────────────────────────────────────────────
 
-cp "${YOCODE_HOME}/bin/hooks/"*.sh "${YOCODE_HOME}/bin/hooks/"
 chmod +x "${YOCODE_HOME}/bin/hooks/"*.sh
-echo "✓ Installed hooks"
+echo "✓ Hooks ready"
 
 # ─── Step 6: Install slash commands ──────────────────────────────────────────
 
 # Symlink commands directory so updates propagate automatically
-if [[ -L "${COMMANDS_DIR}/yocode" ]]; then
-  rm "${COMMANDS_DIR}/yocode"
+mkdir -p "${COMMANDS_DIR}"
+if [[ -L "${COMMANDS_DIR}/yocode" || -d "${COMMANDS_DIR}/yocode" ]]; then
+  rm -rf "${COMMANDS_DIR}/yocode"
 fi
 ln -sf "${YOCODE_HOME}/commands/yocode" "${COMMANDS_DIR}/yocode"
 echo "✓ Installed slash commands → ${COMMANDS_DIR}/yocode"
