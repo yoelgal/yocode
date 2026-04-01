@@ -79,6 +79,8 @@ git clone https://github.com/yoelgal/yocode.git ~/.yocode && ~/.yocode/install.s
 | Command | What it does |
 |---------|-------------|
 | `/yocode:design` | Full design system: competitive research → typography → color → layout → DESIGN.md |
+| `/yocode:design-shotgun` | Generate N design variants, compare side-by-side, remix the best parts |
+| `/yocode:design-html` | Convert approved mockup → production HTML/CSS with real reflow and dark mode |
 | `/yocode:design-review` | Visual audit with AI slop detection. Yes, we know about the gradient. |
 | `/yocode:cso` | Security audit: secrets archaeology, supply chain, OWASP Top 10, STRIDE |
 | `/yocode:office-hours` | Product diagnostic — Startup mode (6 forcing questions) or Builder mode (design thinking) |
